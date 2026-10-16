@@ -89,3 +89,43 @@ Nomes como `TEX_sel01`, `TEX_seleff01`, `TEX_xbg00` e `TEX_sel02` aparecem em re
 - **Observação:** marcador, byte, tamanho, contagem ou valor medido.
 - **Hipótese:** interpretar um campo como posição, UV, cor, índice, contagem ou parâmetro.
 - **Não concluído:** finalidade da malha, mapeamento UV definitivo, formato integral dos recursos de textura e semântica dos campos desconhecidos.
+
+
+### Análise detalhada dos quatro blocos de 0x198 bytes (atualização 2026-10-16)
+
+Foi feita uma leitura em palavras de 4 bytes dos intervalos relativos `+0x090` a `+0x0FC` dos blocos `0x7638`, `0x77D0`, `0x7968` e `0x7B00`. A saída hexadecimal confirma quatro registros com início aparente em `+0x0A0`, `+0x0B8`, `+0x0D0` e `+0x0E8`, espaçados por `0x18` (24 bytes).
+
+Cada registro de 24 bytes tem o padrão observado:
+- dword em `+0x00` do registro: valor interpretável como float;
+- dword em `+0x04`: bytes semelhantes a cor empacotada, por exemplo `6A 6A 6A FF`, `66 66 66 FF` e `69 69 69 FF`;
+- dwords em `+0x08`, `+0x0C`, `+0x10`: coordenadas interpretáveis como X, Y e Z;
+- dword em `+0x14`: float 0 ou 1 nos exemplos.
+
+Valores decodificados observados:
+
+| Bloco | Relativo | Float inicial | Bytes de cor | X aprox. | Y aprox. | Z aprox. | Último float |
+|---|---:|---:|---|---:|---:|---:|---:|
+| `0x7638` | `+0x0A0` | 0.8125 | `6A 6A 6A FF` | -64 | 12 | 0 | 1 |
+| `0x7638` | `+0x0B8` | 0.8125 | `66 66 66 FF` | 64 | 12 | 0 | 0 |
+| `0x7638` | `+0x0D0` | 1.0 | `66 66 66 FF` | -64 | -12 | 0 | 1 |
+| `0x7638` | `+0x0E8` | 1.0 | `66 66 66 FF` | 64 | -12 | 0 | 0 |
+| `0x77D0` | `+0x0A0` | 0.625 | `66 66 66 FF` | -64 | 12 | 0 | 1 |
+| `0x77D0` | `+0x0B8` | 0.625 | `66 66 66 FF` | 64 | 12 | 0 | 0 |
+| `0x77D0` | `+0x0D0` | 0.8125 | `66 66 66 FF` | -64 | -12 | 0 | 1 |
+| `0x77D0` | `+0x0E8` | 0.8125 | `66 66 66 FF` | 64 | -12 | 0 | 0 |
+| `0x7968` | `+0x0A0` | 0.4375 | `66 66 66 FF` | -64 | 12 | 0 | 1 |
+| `0x7968` | `+0x0B8` | 0.4375 | `69 69 69 FF` | 64 | 12 | 0 | 0 |
+| `0x7968` | `+0x0D0` | 0.625 | `66 66 66 FF` | -64 | -12 | 0 | 1 |
+| `0x7968` | `+0x0E8` | 0.625 | `66 66 66 FF` | 64 | -12 | 0 | 0 |
+| `0x7B00` | `+0x0A0` | 0.234375 | `66 66 66 FF` | -64 | 13 | aprox. -0.00005 | 1 |
+| `0x7B00` | `+0x0B8` | 0.234375 | `66 66 66 FF` | 64 | 13 | aprox. -0.00005 | 0 |
+| `0x7B00` | `+0x0D0` | 0.4375 | `66 66 66 FF` | -64 | -13 | aprox. -0.00005 | 1 |
+| `0x7B00` | `+0x0E8` | 0.4375 | `66 66 66 FF` | 64 | -13 | aprox. -0.00005 | 0 |
+
+Os floats de posição são aproximações decimais de valores codificados em binário; a exibição arredondada de PowerShell não deve ser confundida com valores binários exatos. No bloco `0x7B00`, os três campos Z observados contêm os bytes `15 B7 51 B8`, que correspondem aproximadamente a `-0.00005`; o primeiro campo em `+0x028` contém `17 B7 51 38`, aproximadamente `+0.00005`, enquanto os blocos anteriores têm zero nesse local.
+
+A organização espacial dos quatro registros — X próximo de `-64, +64, -64, +64`, Y próximo de `+12, +12, -12, -12` (ou `±13` no quarto bloco) — é compatível com os quatro cantos de um retângulo. O float inicial varia por linha vertical, enquanto o último float alterna entre 1 e 0 por coluna horizontal. **Hipótese a testar:** esses dois floats podem formar as duas coordenadas de textura (UV, possivelmente em ordem V/U); a interpretação não foi validada por renderização com textura de teste. Os bytes semelhantes a cor também não tiveram a ordem de canais confirmada.
+
+O dword em `+0x18C` dos blocos contém 20, 21, 22 e 23, respectivamente; em `+0x188`, os valores observados são 100 nos três primeiros blocos e 82 no bloco `0x7B00`. A semântica desses campos continua desconhecida.
+
+Esta atualização refina a descrição anterior dos registros como candidatos a vértices, mas **não confirma** o formato geral de todos os blocos CCMF nem a função visual dos retângulos.
