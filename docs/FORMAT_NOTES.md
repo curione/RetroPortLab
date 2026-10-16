@@ -35,3 +35,29 @@ No `custom.ccs`, quatro blocos consecutivos em `0x7638`, `0x77D0`, `0x7968` e `0
 ## Regras para conclusões
 
 Nunca inferir a semântica de um campo apenas porque seu valor parece um float ou um inteiro plausível. Os mesmos quatro bytes podem representar tipos diferentes. Marcar cada conclusão como observada, hipótese ou pendente e documentar quais testes poderiam refutá-la.
+
+
+## Observação adicional: registros de 24 bytes em `custom.ccs` (2026-10-16)
+
+Nos blocos `0x7638`, `0x77D0`, `0x7968` e `0x7B00`, foram observados quatro registros com stride de `0x18`, iniciando relativamente em `+0x0A0`, `+0x0B8`, `+0x0D0` e `+0x0E8`. A interpretação provisória por registro é:
+
+| Offset relativo dentro do registro | Interpretação candidata |
+|---|---|
+| `+0x00` | Float variável; pode ser uma coordenada de textura |
+| `+0x04` | Quatro bytes semelhantes a cor empacotada (ex.: `66 66 66 FF`) |
+| `+0x08` | X, aproximadamente -64 ou +64 |
+| `+0x0C` | Y, aproximadamente +12/-12 ou +13/-13 |
+| `+0x10` | Z, normalmente zero; cerca de -0.00005 no bloco `0x7B00` |
+| `+0x14` | Float 1 ou 0, alternando entre os dois lados do retângulo; pode ser a segunda coordenada de textura |
+
+A disposição dos valores é consistente com quatro cantos de retângulo. O primeiro float muda entre os pares superior/inferior; o último alterna por coluna. Isso torna plausível que os dois campos sejam UVs, mas ainda não houve validação com textura sintética no Blender. A ordem dos canais de cor também permanece desconhecida.
+
+Valores observados no primeiro campo dos quatro registros, na ordem `+0x0A0, +0x0B8, +0x0D0, +0x0E8`:
+- `0x7638`: 0.8125, 0.8125, 1.0, 1.0.
+- `0x77D0`: 0.625, 0.625, 0.8125, 0.8125.
+- `0x7968`: 0.4375, 0.4375, 0.625, 0.625.
+- `0x7B00`: 0.234375, 0.234375, 0.4375, 0.4375.
+
+O bloco `0x7B00` também difere por Y próximo de ±13, Z próximo de -0.00005 e pelo float próximo de +0.00005 em `+0x028`. O campo em `+0x18C` contém 20, 21, 22 e 23 nos quatro blocos; ainda não foi identificado seu significado.
+
+**Status:** layout de registro candidato observado; UV, semântica dos campos finais e função gráfica ainda não confirmados. Não generalizar esse layout para todos os CCMF.
