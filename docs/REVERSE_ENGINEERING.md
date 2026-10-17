@@ -129,3 +129,32 @@ A organização espacial dos quatro registros — X próximo de `-64, +64, -64, 
 O dword em `+0x18C` dos blocos contém 20, 21, 22 e 23, respectivamente; em `+0x188`, os valores observados são 100 nos três primeiros blocos e 82 no bloco `0x7B00`. A semântica desses campos continua desconhecida.
 
 Esta atualização refina a descrição anterior dos registros como candidatos a vértices, mas **não confirma** o formato geral de todos os blocos CCMF nem a função visual dos retângulos.
+
+
+### Correção de leitura dos quatro registros em `custom.ccs` (2026-10-16)
+
+A leitura palavra a palavra dos offsets relativos `+0x090` a `+0x0FC` esclarece a separação dos campos. Os quatro registros começam em `+0x0A0`, `+0x0B8`, `+0x0D0` e `+0x0E8`, com stride `0x18` (24 bytes). Em cada registro, os campos observados são:
+
+| Offset relativo dentro do registro | Bytes / valores observados | Status |
+|---|---|---|
+| `+0x00` | Float variável: ver tabela abaixo | Tipo numérico observado; possível UV é hipótese |
+| `+0x04` | `6A 6A 6A FF`, `66 66 66 FF` ou `69 69 69 FF` | Quatro bytes semelhantes a cor empacotada |
+| `+0x08` | Float próximo de `-64` ou `+64` | Coordenada X candidata |
+| `+0x0C` | Float próximo de `+12/-12` ou `+13/-13` | Coordenada Y candidata |
+| `+0x10` | Zero, ou bytes `15 B7 51 B8` (~`-0.00005`) no bloco `0x7B00` | Coordenada Z candidata |
+| `+0x14` | Inteiro little-endian `1, 0, 1, 2` na ordem dos quatro registros | Campo ainda não identificado |
+
+**Correção importante:** os valores em `+0x0B4`, `+0x0CC`, `+0x0E4` e `+0x0FC` são, respectivamente, `1, 0, 1, 2` em todos os quatro blocos. Portanto, não se deve descrever o último campo como um par UV alternando simplesmente entre 1 e 0: o quarto registro termina em inteiro `2`, e o tipo/semântica deste campo ainda é desconhecido. A hipótese de UV para o primeiro float permanece apenas hipótese; os dados atuais não demonstram um par UV completo por vértice.
+
+Valores do primeiro campo (`+0x00` do registro) na ordem dos quatro registros:
+
+| Bloco base | Registro 1 | Registro 2 | Registro 3 | Registro 4 |
+|---|---:|---:|---:|---:|
+| `0x7638` | 0.8125 | 0.8125 | 1.0 | 1.0 |
+| `0x77D0` | 0.625 | 0.625 | 0.8125 | 0.8125 |
+| `0x7968` | 0.4375 | 0.4375 | 0.625 | 0.625 |
+| `0x7B00` | 0.234375 | 0.234375 | 0.4375 | 0.4375 |
+
+As posições X/Y formam quatro cantos compatíveis com um retângulo: X ~`-64,+64,-64,+64`; Y ~`+12,+12,-12,-12` nos três primeiros blocos e ~`+13,+13,-13,-13` em `0x7B00`. No bloco `0x7B00`, Z nos quatro registros é ~`-0.00005`; além disso, o campo relativo `+0x028` do bloco contém float ~`+0.00005`, diferente dos zeros nos outros três blocos.
+
+Os valores em `+0x098` e `+0x0FC` incluem inteiros `2`, mas não se conclui que sejam índices de malha: a topologia e o significado dos campos finais precisam ser verificados em mais blocos e/ou por teste de renderização. A aparência de retângulo é uma inferência geométrica consistente com as coordenadas, não identificação confirmada do objeto no jogo.
