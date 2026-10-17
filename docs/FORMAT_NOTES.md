@@ -61,3 +61,19 @@ Valores observados no primeiro campo dos quatro registros, na ordem `+0x0A0, +0x
 O bloco `0x7B00` também difere por Y próximo de ±13, Z próximo de -0.00005 e pelo float próximo de +0.00005 em `+0x028`. O campo em `+0x18C` contém 20, 21, 22 e 23 nos quatro blocos; ainda não foi identificado seu significado.
 
 **Status:** layout de registro candidato observado; UV, semântica dos campos finais e função gráfica ainda não confirmados. Não generalizar esse layout para todos os CCMF.
+
+
+## Correção de layout: campos finais dos registros de 24 bytes
+
+A tabela de offsets foi refinada com a leitura completa de quatro bytes por vez. Para registros que começam em `+0x0A0`, `+0x0B8`, `+0x0D0` e `+0x0E8`, os campos são relativos ao início de cada registro: float candidato em `+0x00`, quatro bytes de possível cor em `+0x04`, X/Y/Z candidatos em `+0x08/+0x0C/+0x10`, e um campo ainda desconhecido em `+0x14`.
+
+O campo final tem os inteiros `1, 0, 1, 2` nos quatro registros, inclusive o valor `2` no quarto registro. Portanto, não é correto tratá-lo como uma segunda coordenada UV simples. A hipótese de que o primeiro float seja uma coordenada UV continua sem confirmação e não há ainda evidência de um par UV completo por vértice.
+
+| Base do bloco | Float inicial por registro (4 valores) | Campo final por registro |
+|---|---|---|
+| `0x7638` | 0.8125, 0.8125, 1.0, 1.0 | 1, 0, 1, 2 |
+| `0x77D0` | 0.625, 0.625, 0.8125, 0.8125 | 1, 0, 1, 2 |
+| `0x7968` | 0.4375, 0.4375, 0.625, 0.625 | 1, 0, 1, 2 |
+| `0x7B00` | 0.234375, 0.234375, 0.4375, 0.4375 | 1, 0, 1, 2 |
+
+Os campos X/Y são consistentes com os cantos de um retângulo. O bloco `0x7B00` usa Y próximo de ±13 e Z próximo de -0.00005, ao contrário dos demais, que usam Y próximo de ±12 e Z zero. Esses padrões ainda são observações de uma amostra de quatro blocos, não uma especificação geral de CCMF.
