@@ -22,9 +22,10 @@ Principais resultados preliminares:
 - Uma região em `charsel1.ccs` apresenta uma malha candidata coerente com 25 vértices, 96 índices e 32 triângulos.
 - Os arquivos OBJ de teste `mesh_grid_A.obj` e `mesh_grid_B.obj` foram exportados para inspeção visual.
 - Em `custom.ccs`, foram encontrados 28 marcadores `CCMF`; quatro blocos consecutivos de 0x198 bytes têm campos semelhantes e diferenças localizadas.
+- Uma análise posterior encontrou quatro cópias idênticas de um trecho de 112 bytes em `charsel1.ccs`, alinhadas a `+0x384` e `+0x804` em dois marcadores. Os contextos incluem regiões comuns de 1.059 e 203 bytes, respectivamente. Isso documenta recorrência, mas não determina a semântica dos blocos.
 - Referências textuais como `TEX_sel01` foram encontradas, mas isso não comprova que os pixels da textura estejam embutidos no arquivo CCS.
 
-Consulte [as notas de engenharia reversa](docs/REVERSE_ENGINEERING.md), [as notas de formato](docs/FORMAT_NOTES.md) e o [roteiro](docs/ROADMAP.md).
+Consulte [as notas de engenharia reversa](docs/REVERSE_ENGINEERING.md), [as notas de formato](docs/FORMAT_NOTES.md), o [relatório de recorrência CCMF](docs/CCMF_REPETITION_ANALYSIS.md) e o [roteiro](docs/ROADMAP.md).
 
 ## Estrutura do repositório
 
