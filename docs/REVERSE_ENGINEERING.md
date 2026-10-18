@@ -1,6 +1,6 @@
 # Caderno de engenharia reversa
 
-Este documento consolida as observações disponíveis até 2026-10-16. Os offsets são relativos ao início do arquivo, salvo indicação contrária. Todos os resultados vêm de análise estática dos arquivos locais; devem ser reproduzidos antes de serem tratados como especificação definitiva.
+Este documento consolida as observações disponíveis até 2026-10-18. Os offsets são relativos ao início do arquivo, salvo indicação contrária. Todos os resultados vêm de análise estática dos arquivos locais; devem ser reproduzidos antes de serem tratados como especificação definitiva.
 
 ## Arquivos examinados
 
@@ -29,7 +29,7 @@ Observações da região:
 
 - Uma sequência candidata de vértices começa em `base + 0x0D00`, com passo de 0x18 bytes (24 bytes).
 - Foram interpretados 25 vértices, com coordenadas X e Y organizadas como uma grade de 5×5. X observado aproximadamente: -85, -42.5, 0, 42.5, 85; Y: 64, 32, 0, -32, -64. O valor Z é próximo de zero.
-- Uma sequência candidata de índices começa em `base + 0x0F4C`, com 96 valores UInt32 (384 bytes), até o offset relativo `+0x10CC).
+- Uma sequência candidata de índices começa em `base + 0x0F4C`, com 96 valores UInt32 (384 bytes), até o offset relativo `+0x10CC`.
 - Os índices observados variam de 0 a 24; as duas listas comparadas para A/B eram idênticas.
 - 96 índices agrupados em trios representam 32 triângulos. Os trios examinados não repetiam o mesmo índice dentro do triângulo.
 - A geometria resultante é consistente com uma grade de 5×5 vértices, subdividida em 16 células e dois triângulos por célula.
@@ -51,6 +51,23 @@ Exemplos de regiões investigadas:
 - `0x001AD55C` foi usada como início de uma sequência nomeada provisoriamente `Malha_9B`.
 
 Comparações A/B/C reportadas apresentaram listas de índices iguais e coordenadas UV iguais em casos específicos. As diferenças máximas de XYZ medidas em uma comparação foram aproximadamente 1.5e-05 ou 3.8e-06. Isso sugere cópias quase idênticas em alguns campos, mas não esclarece a semântica dos blocos.
+
+### Recorrência de um trecho de 112 bytes (2026-10-18)
+
+A varredura de 32 marcadores examinou janelas de 112 bytes nos deslocamentos relativos `+0x384` e `+0x804`. Todas as 64 janelas estavam dentro dos limites do arquivo. Somente quatro janelas coincidiram integralmente com a sequência de referência, cujo SHA-256 é `51dfa76cfb5e1eaafcdcd3a11316fa9a8ba305344606b9471966cb8f10714496`:
+
+| Marcador observado | Deslocamento | Offset absoluto |
+|---|---:|---:|
+| `0x001ADE90` | `+0x384` | `0x001AE214` |
+| `0x001ADE90` | `+0x804` | `0x001AE694` |
+| `0x001AF748` | `+0x384` | `0x001AFACC` |
+| `0x001AF748` | `+0x804` | `0x001AFF4C` |
+
+A busca global encontrou somente essas quatro cópias completas e nenhuma correspondência parcial de 96 a 111 bytes. Em cada cópia, a string `TEX_seleff01` começa no deslocamento interno `+0x24`. A string também ocorre em `0x0000228C`, mas o restante do trecho não coincide integralmente.
+
+As ocorrências em `+0x384` pertencem a uma região idêntica de 1.059 bytes nos intervalos `[0x001ADE9D, 0x001AE2C0)` e `[0x001AF755, 0x001AFB78)`. As ocorrências em `+0x804` pertencem a uma região idêntica de 203 bytes nos intervalos `[0x001AE675, 0x001AE740)` e `[0x001AFF2D, 0x001AFFF8)`. Entre os grupos `+0x384` e `+0x804`, a igualdade contígua não se estende para além dos 112 bytes centrais.
+
+**Interpretação limitada:** as posições relativas e os contextos compartilhados são compatíveis com reutilização de conteúdo em regiões organizadas de maneira semelhante. Não demonstram que os marcadores delimitem recursos completos, nem que os deslocamentos sejam ponteiros, tamanhos, IDs ou campos semânticos. Não foi estabelecido se o trecho é geometria, material, textura incorporada ou outro recurso. Consulte o [relatório detalhado de recorrência](CCMF_REPETITION_ANALYSIS.md).
 
 ## `custom.ccs`
 
@@ -90,63 +107,11 @@ Nomes como `TEX_sel01`, `TEX_seleff01`, `TEX_xbg00` e `TEX_sel02` aparecem em re
 - **Hipótese:** interpretar um campo como posição, UV, cor, índice, contagem ou parâmetro.
 - **Não concluído:** finalidade da malha, mapeamento UV definitivo, formato integral dos recursos de textura e semântica dos campos desconhecidos.
 
+### Detalhes históricos dos quatro blocos de 0x198 bytes em `custom.ccs` (2026-10-16)
 
-### Análise detalhada dos quatro blocos de 0x198 bytes (atualização 2026-10-16)
+A leitura em palavras de 4 bytes dos intervalos relativos `+0x090` a `+0x0FC` dos blocos `0x7638`, `0x77D0`, `0x7968` e `0x7B00` confirmou quatro registros com início aparente em `+0x0A0`, `+0x0B8`, `+0x0D0` e `+0x0E8`, espaçados por `0x18` (24 bytes).
 
-Foi feita uma leitura em palavras de 4 bytes dos intervalos relativos `+0x090` a `+0x0FC` dos blocos `0x7638`, `0x77D0`, `0x7968` e `0x7B00`. A saída hexadecimal confirma quatro registros com início aparente em `+0x0A0`, `+0x0B8`, `+0x0D0` e `+0x0E8`, espaçados por `0x18` (24 bytes).
-
-Cada registro de 24 bytes tem o padrão observado:
-- dword em `+0x00` do registro: valor interpretável como float;
-- dword em `+0x04`: bytes semelhantes a cor empacotada, por exemplo `6A 6A 6A FF`, `66 66 66 FF` e `69 69 69 FF`;
-- dwords em `+0x08`, `+0x0C`, `+0x10`: coordenadas interpretáveis como X, Y e Z;
-- dword em `+0x14`: float 0 ou 1 nos exemplos.
-
-Valores decodificados observados:
-
-| Bloco | Relativo | Float inicial | Bytes de cor | X aprox. | Y aprox. | Z aprox. | Último float |
-|---|---:|---:|---|---:|---:|---:|---:|
-| `0x7638` | `+0x0A0` | 0.8125 | `6A 6A 6A FF` | -64 | 12 | 0 | 1 |
-| `0x7638` | `+0x0B8` | 0.8125 | `66 66 66 FF` | 64 | 12 | 0 | 0 |
-| `0x7638` | `+0x0D0` | 1.0 | `66 66 66 FF` | -64 | -12 | 0 | 1 |
-| `0x7638` | `+0x0E8` | 1.0 | `66 66 66 FF` | 64 | -12 | 0 | 0 |
-| `0x77D0` | `+0x0A0` | 0.625 | `66 66 66 FF` | -64 | 12 | 0 | 1 |
-| `0x77D0` | `+0x0B8` | 0.625 | `66 66 66 FF` | 64 | 12 | 0 | 0 |
-| `0x77D0` | `+0x0D0` | 0.8125 | `66 66 66 FF` | -64 | -12 | 0 | 1 |
-| `0x77D0` | `+0x0E8` | 0.8125 | `66 66 66 FF` | 64 | -12 | 0 | 0 |
-| `0x7968` | `+0x0A0` | 0.4375 | `66 66 66 FF` | -64 | 12 | 0 | 1 |
-| `0x7968` | `+0x0B8` | 0.4375 | `69 69 69 FF` | 64 | 12 | 0 | 0 |
-| `0x7968` | `+0x0D0` | 0.625 | `66 66 66 FF` | -64 | -12 | 0 | 1 |
-| `0x7968` | `+0x0E8` | 0.625 | `66 66 66 FF` | 64 | -12 | 0 | 0 |
-| `0x7B00` | `+0x0A0` | 0.234375 | `66 66 66 FF` | -64 | 13 | aprox. -0.00005 | 1 |
-| `0x7B00` | `+0x0B8` | 0.234375 | `66 66 66 FF` | 64 | 13 | aprox. -0.00005 | 0 |
-| `0x7B00` | `+0x0D0` | 0.4375 | `66 66 66 FF` | -64 | -13 | aprox. -0.00005 | 1 |
-| `0x7B00` | `+0x0E8` | 0.4375 | `66 66 66 FF` | 64 | -13 | aprox. -0.00005 | 0 |
-
-Os floats de posição são aproximações decimais de valores codificados em binário; a exibição arredondada de PowerShell não deve ser confundida com valores binários exatos. No bloco `0x7B00`, os três campos Z observados contêm os bytes `15 B7 51 B8`, que correspondem aproximadamente a `-0.00005`; o primeiro campo em `+0x028` contém `17 B7 51 38`, aproximadamente `+0.00005`, enquanto os blocos anteriores têm zero nesse local.
-
-A organização espacial dos quatro registros — X próximo de `-64, +64, -64, +64`, Y próximo de `+12, +12, -12, -12` (ou `±13` no quarto bloco) — é compatível com os quatro cantos de um retângulo. O float inicial varia por linha vertical, enquanto o último float alterna entre 1 e 0 por coluna horizontal. **Hipótese a testar:** esses dois floats podem formar as duas coordenadas de textura (UV, possivelmente em ordem V/U); a interpretação não foi validada por renderização com textura de teste. Os bytes semelhantes a cor também não tiveram a ordem de canais confirmada.
-
-O dword em `+0x18C` dos blocos contém 20, 21, 22 e 23, respectivamente; em `+0x188`, os valores observados são 100 nos três primeiros blocos e 82 no bloco `0x7B00`. A semântica desses campos continua desconhecida.
-
-Esta atualização refina a descrição anterior dos registros como candidatos a vértices, mas **não confirma** o formato geral de todos os blocos CCMF nem a função visual dos retângulos.
-
-
-### Correção de leitura dos quatro registros em `custom.ccs` (2026-10-16)
-
-A leitura palavra a palavra dos offsets relativos `+0x090` a `+0x0FC` esclarece a separação dos campos. Os quatro registros começam em `+0x0A0`, `+0x0B8`, `+0x0D0` e `+0x0E8`, com stride `0x18` (24 bytes). Em cada registro, os campos observados são:
-
-| Offset relativo dentro do registro | Bytes / valores observados | Status |
-|---|---|---|
-| `+0x00` | Float variável: ver tabela abaixo | Tipo numérico observado; possível UV é hipótese |
-| `+0x04` | `6A 6A 6A FF`, `66 66 66 FF` ou `69 69 69 FF` | Quatro bytes semelhantes a cor empacotada |
-| `+0x08` | Float próximo de `-64` ou `+64` | Coordenada X candidata |
-| `+0x0C` | Float próximo de `+12/-12` ou `+13/-13` | Coordenada Y candidata |
-| `+0x10` | Zero, ou bytes `15 B7 51 B8` (~`-0.00005`) no bloco `0x7B00` | Coordenada Z candidata |
-| `+0x14` | Inteiro little-endian `1, 0, 1, 2` na ordem dos quatro registros | Campo ainda não identificado |
-
-**Correção importante:** os valores em `+0x0B4`, `+0x0CC`, `+0x0E4` e `+0x0FC` são, respectivamente, `1, 0, 1, 2` em todos os quatro blocos. Portanto, não se deve descrever o último campo como um par UV alternando simplesmente entre 1 e 0: o quarto registro termina em inteiro `2`, e o tipo/semântica deste campo ainda é desconhecido. A hipótese de UV para o primeiro float permanece apenas hipótese; os dados atuais não demonstram um par UV completo por vértice.
-
-Valores do primeiro campo (`+0x00` do registro) na ordem dos quatro registros:
+Cada registro de 24 bytes foi observado com um dword interpretável como float, quatro bytes semelhantes a cor empacotada, três dwords interpretáveis como coordenadas X/Y/Z e um dword final cujo significado permanece desconhecido. A organização espacial dos quatro registros é compatível com os quatro cantos de um retângulo.
 
 | Bloco base | Registro 1 | Registro 2 | Registro 3 | Registro 4 |
 |---|---:|---:|---:|---:|
@@ -155,6 +120,6 @@ Valores do primeiro campo (`+0x00` do registro) na ordem dos quatro registros:
 | `0x7968` | 0.4375 | 0.4375 | 0.625 | 0.625 |
 | `0x7B00` | 0.234375 | 0.234375 | 0.4375 | 0.4375 |
 
-As posições X/Y formam quatro cantos compatíveis com um retângulo: X ~`-64,+64,-64,+64`; Y ~`+12,+12,-12,-12` nos três primeiros blocos e ~`+13,+13,-13,-13` em `0x7B00`. No bloco `0x7B00`, Z nos quatro registros é ~`-0.00005`; além disso, o campo relativo `+0x028` do bloco contém float ~`+0.00005`, diferente dos zeros nos outros três blocos.
+**Correção de interpretação:** os campos finais observados em `+0x0B4`, `+0x0CC`, `+0x0E4` e `+0x0FC` foram registrados como inteiros `1, 0, 1, 2` na ordem dos quatro registros. Portanto, não se deve descrever esse campo como um par UV alternando simplesmente entre 1 e 0. A hipótese de UV para o primeiro float permanece não confirmada; os dados não demonstram um par UV completo por vértice.
 
-Os valores em `+0x098` e `+0x0FC` incluem inteiros `2`, mas não se conclui que sejam índices de malha: a topologia e o significado dos campos finais precisam ser verificados em mais blocos e/ou por teste de renderização. A aparência de retângulo é uma inferência geométrica consistente com as coordenadas, não identificação confirmada do objeto no jogo.
+Os valores em `+0x098` e `+0x0FC` incluem inteiros `2`, mas não se conclui que sejam índices de malha. A topologia e o significado dos campos finais precisam ser verificados em mais blocos e/ou por teste de renderização.
