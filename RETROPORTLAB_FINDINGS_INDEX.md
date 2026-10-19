@@ -23,6 +23,7 @@ O foco atual é exclusivamente a prova de conceito nativa para Windows. Android 
 - Em `custom.ccs`, os tamanhos usados no inventário coincidem com a distância até o próximo marcador e o último intervalo vai até o fim do arquivo. Isso é consequência do método de segmentação e não prova limites reais de recursos.
 - A investigação estática do EBOOT confirmou um cabeçalho `~PSP`, mas não identificou um payload ELF legível, arquitetura executável, entry point real ou tabelas ELF.
 - A auditoria local não encontrou uma ferramenta de captura PSP GE já disponível para rastrear desenho, buffers e proveniência até offsets CCS.
+- Uma auditoria de referências nominais reportou que 590 dos 595 identificadores CCS únicos em `ccsName.strtbl` também aparecem em `texName.strtbl` com o prefixo `TEX_`. Isso indica uma convenção de nomenclatura compartilhada, mas não comprova referência estrutural nem associação a uma textura específica. O relatório detalhado permanece local em `reports/native_windows_ccs_cross_resource_reference_audit_20261018.md` e ainda não foi sincronizado integralmente para este repositório.
 
 ## Estado do visualizador nativo
 
@@ -42,13 +43,13 @@ Esses resultados demonstram a infraestrutura de visualização sintética, PNG e
 - limites reais e semântica dos blocos CCMF;
 - layout/stride de vértices e interpretação de campos candidatos;
 - formato e proveniência de índices;
-- formato das texturas internas e relação entre nomes `TEX_...` e dados de imagem;
+- formato das texturas internas e relação entre nomes `TEX_...` e dados de imagem; a correspondência nominal CCS/TEX observada não prova essa relação;
 - relação entre recursos CCS e chamadas gráficas reais do jogo;
 - viabilidade de reconstruir lógica, animações, cenas, áudio, interface e controles para um port completo.
 
 ## Próxima dependência técnica
 
-A evidência mais forte seria uma captura reproduzível em um runtime PSP autorizado que associe um evento de desenho ao conteúdo dos buffers e à proveniência dos bytes nos arquivos CCS. Até existir esse pré-requisito, não tratar hipóteses binárias como especificação e não repetir buscas sem uma hipótese nova e falsificável.
+Para avançar na relação CCS/TEX, falta uma referência estrutural ou uma observação de uso que ligue um identificador a dados de textura concretos; a ausência de correspondência externa para os nomes `TEX_sel_*` em `charsel1.ccs` permanece sem explicação. A evidência mais forte seria uma captura reproduzível em um runtime PSP autorizado que associe um evento de desenho ao conteúdo dos buffers e à proveniência dos bytes nos arquivos CCS. Até existir esse pré-requisito, não tratar hipóteses binárias como especificação e não repetir buscas sem uma hipótese nova e falsificável.
 
 ## Política de publicação
 
