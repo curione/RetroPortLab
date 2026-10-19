@@ -23,6 +23,7 @@ O foco atual é exclusivamente a prova de conceito nativa para Windows. Android 
 - Em `custom.ccs`, os tamanhos usados no inventário coincidem com a distância até o próximo marcador e o último intervalo vai até o fim do arquivo. Isso é consequência do método de segmentação e não prova limites reais de recursos.
 - A investigação estática do EBOOT confirmou um cabeçalho `~PSP`, mas não identificou um payload ELF legível, arquitetura executável, entry point real ou tabelas ELF.
 - A auditoria local não encontrou uma ferramenta de captura PSP GE já disponível para rastrear desenho, buffers e proveniência até offsets CCS.
+- Uma auditoria local posterior identificou 51 pares ordenados de caminhos `f\\sel\\sel_*.bmp` e nomes `TEX_sel_*` em `charsel1.ccs`; os sufixos coincidem e valores u16 observados acompanham ordinais de 1 a 51. Isso sustenta uma possível associação local, mas ainda não prova que o campo u16 seja um índice nem que esses caminhos sejam resolvidos para imagens efetivamente usadas pelo jogo. A ausência de `TEX_sel_*` em `texName.strtbl` permanece sem explicação comprovada. O relatório detalhado permanece local em `reports/native_windows_ccs_tex_structural_link_audit_20261019.md` e não foi sincronizado integralmente.
 - Uma auditoria de referências nominais reportou que 590 dos 595 identificadores CCS únicos em `ccsName.strtbl` também aparecem em `texName.strtbl` com o prefixo `TEX_`. Isso indica uma convenção de nomenclatura compartilhada, mas não comprova referência estrutural nem associação a uma textura específica. O relatório detalhado permanece local em `reports/native_windows_ccs_cross_resource_reference_audit_20261018.md` e ainda não foi sincronizado integralmente para este repositório.
 
 ## Estado do visualizador nativo
@@ -49,7 +50,7 @@ Esses resultados demonstram a infraestrutura de visualização sintética, PNG e
 
 ## Próxima dependência técnica
 
-Para avançar na relação CCS/TEX, falta uma referência estrutural ou uma observação de uso que ligue um identificador a dados de textura concretos; a ausência de correspondência externa para os nomes `TEX_sel_*` em `charsel1.ccs` permanece sem explicação. A evidência mais forte seria uma captura reproduzível em um runtime PSP autorizado que associe um evento de desenho ao conteúdo dos buffers e à proveniência dos bytes nos arquivos CCS. Até existir esse pré-requisito, não tratar hipóteses binárias como especificação e não repetir buscas sem uma hipótese nova e falsificável.
+Para avançar na relação CCS/TEX, falta uma validação independente que mostre como um caso concreto (por exemplo, `asw`) é resolvido até os bytes de uma imagem. Os 51 pares ordenados e os valores u16 correlacionados com ordinais são evidência de uma possível associação local, mas não provam semântica de índice nem resolução/uso da imagem; a ausência de correspondência externa para `TEX_sel_*` em `texName.strtbl` permanece sem explicação comprovada. A evidência mais forte seria uma captura reproduzível em um runtime PSP autorizado que associe um evento de desenho ao conteúdo dos buffers e à proveniência dos bytes nos arquivos CCS. Até existir esse pré-requisito, não tratar hipóteses binárias como especificação e não repetir buscas sem uma hipótese nova e falsificável.
 
 ## Política de publicação
 
