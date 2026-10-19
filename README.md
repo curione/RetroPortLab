@@ -2,49 +2,33 @@
 
 Pesquisa técnica e desenvolvimento experimental de ferramentas para compreender formatos de arquivos de jogos e estudar a viabilidade de ports nativos.
 
-> **Estado:** pesquisa exploratória de formatos e geometria. Ainda não existe um port jogável. Resultados preliminares devem ser validados antes de orientar uma implementação.
+> **Estado:** pesquisa exploratória de formatos e infraestrutura de visualização nativa. Ainda não existe um port jogável. Resultados preliminares devem ser validados antes de orientar uma implementação.
 
 ## Objetivos
 
 - Inventariar recursos extraídos legalmente de uma cópia do usuário.
 - Documentar formatos binários e estruturas ainda não totalmente compreendidas.
 - Desenvolver ferramentas de análise reproduzíveis.
-- Investigar a extração/conversão de geometria, texturas, áudio e dados de interface.
-- Avaliar uma arquitetura multiplataforma, começando por PC Windows; Android e Nintendo Switch são objetivos posteriores, sujeitos a viabilidade técnica e às regras de cada plataforma.
+- Investigar geometria, texturas, áudio e dados de interface.
+- Focar inicialmente no PC Windows; Android e Nintendo Switch estão adiados e dependem de viabilidade técnica e requisitos aplicáveis.
 
 ## Estado atual
 
-A pesquisa inicial usa recursos CCS do diretório `21btlsel` de *Naruto Shippuuden - Narutimate Accel 3* (PSP). O trabalho está concentrado em identificar estruturas `CCMF`, possíveis registros de vértices e listas de índices.
+A pesquisa usa recursos CCS de *Naruto Shippuuden - Narutimate Accel 3* (PSP). O renderizador experimental nativo Win32/WGL/OpenGL já valida a apresentação de PNGs e malhas OBJ texturizadas com recursos sintéticos. Isso comprova a infraestrutura do visualizador, não a interpretação do formato gráfico proprietário.
 
-Principais resultados preliminares:
+Principais documentos:
 
-- Foram identificados 32 marcadores `CCMF` no arquivo `charsel1.ccs` analisado.
-- Uma região em `charsel1.ccs` apresenta uma malha candidata coerente com 25 vértices, 96 índices e 32 triângulos.
-- Os arquivos OBJ de teste `mesh_grid_A.obj` e `mesh_grid_B.obj` foram exportados para inspeção visual.
-- Em `custom.ccs`, foram encontrados 28 marcadores `CCMF`; quatro blocos consecutivos de 0x198 bytes têm campos semelhantes e diferenças localizadas.
-- Uma análise posterior encontrou quatro cópias idênticas de um trecho de 112 bytes em `charsel1.ccs`, alinhadas a `+0x384` e `+0x804` em dois marcadores. Os contextos incluem regiões comuns de 1.059 e 203 bytes, respectivamente. Isso documenta recorrência, mas não determina a semântica dos blocos.
-- Referências textuais como `TEX_sel01` foram encontradas, mas isso não comprova que os pixels da textura estejam embutidos no arquivo CCS.
-
-Consulte [as notas de engenharia reversa](docs/REVERSE_ENGINEERING.md), [as notas de formato](docs/FORMAT_NOTES.md), o [relatório de recorrência CCMF](docs/CCMF_REPETITION_ANALYSIS.md) e o [roteiro](docs/ROADMAP.md).
-
-## Estrutura do repositório
-
-- `docs/` — caderno de pesquisa, hipóteses e próximos passos.
-- `reports/` — relatórios textuais revisáveis; não incluir dumps grandes ou recursos originais sem necessidade.
-- `scripts/` — analisadores e utilitários cuja procedência e funcionamento tenham sido verificados.
+- [Índice central de descobertas](docs/RETROPORTLAB_FINDINGS_INDEX.md)
+- [Progresso do visualizador nativo (2026-10-19)](docs/NATIVE_VIEWER_PROGRESS_2026-10-19.md)
+- [Caderno de engenharia reversa](docs/REVERSE_ENGINEERING.md)
+- [Notas de formato](docs/FORMAT_NOTES.md)
+- [Inventário de recursos](docs/RESOURCE_INVENTORY.md)
+- [Análise de recorrência CCMF](docs/CCMF_REPETITION_ANALYSIS.md)
+- [Roteiro](docs/ROADMAP.md)
 
 ## Princípios de documentação
 
-Cada observação deve ser classificada como:
-- **Observado:** bytes, offsets, tamanhos ou contagens medidos diretamente.
-- **Interpretação:** explicação provável, ainda não confirmada.
-- **Pendente:** teste necessário para distinguir hipóteses.
-
-Não publicar ISOs, arquivos originais do jogo, áudio, imagens ou outros recursos protegidos. Publicar apenas documentação e ferramentas próprias, evitando material derivado que não seja necessário para explicar a pesquisa.
-
-## Ambiente de referência
-
-O ambiente de análise registrado usa Windows, PowerShell, Python e Blender. Ferramentas CRI foram utilizadas para extrair arquivos do contêiner CPK. A configuração de máquina e versões específicas deve ser registrada novamente quando necessária para reproduzir um resultado.
+Classifique cada resultado como observado, inferência ou hipótese. Não trate a presença de `CCMF` como prova de limite de recurso. Não publique ISOs, executáveis protegidos, recursos originais ou extraídos do jogo, capturas ou modelos experimentais derivados quando não forem necessários para explicar a pesquisa.
 
 ## Aviso
 
